@@ -1,6 +1,7 @@
 import streamlit as st
 import sqlite3
 
+# ---------- STEP 1: Create the database if it doesn't exist ----------
 def create_database():
     conn = sqlite3.connect("ebooks.db")
     cursor = conn.cursor()
@@ -16,31 +17,42 @@ def create_database():
     )
     """)
 
-    cursor.execute("SELECT COUNT(*) FROM books")
-    if cursor.fetchone()[0] == 0:
-        cursor.executemany("""
-        INSERT INTO books (title, author, language, description, file_path)
-        VALUES (?, ?, ?, ?, ?)
-        """, [
-            ('Thirukkural', 'Thiruvalluvar', 'Tamil', 'Ancient Tamil couplets',
-             'https://www.scribd.com/document/456942075/%E0%AE%A4%E0%AE%BF%E0%AE%B0%E0%AF%81%E0%AE%95-%E0%AE%95%E0%AF%81%E0%AE%B1%E0%AE%B3-%E0%AE%8E%E0%AE%B3%E0%AE%BF%E0%AE%AF-%E0%AE%89%E0%AE%B0%E0%AF%88-pdf'),
-            ('Gitanjali', 'Rabindranath Tagore', 'Bengali', 'Poems of devotion',
-             'https://archive.org/details/gitanjali00unse/page/n21/mode/2up'),
-            ('Panchatantra', 'Vishnu Sharma', 'Sanskrit', 'Stories with morals',
-             'https://archive.org/details/PanchatantraSanskritHindi-JpMishra1910')
-        ])
-        conn.commit()
+    conn.commit()
     conn.close()
 
-def display_books():
+# ---------- STEP 2: Insert a new book ----------
+def insert_book(title, author, language, description, file_path):
     conn = sqlite3.connect("ebooks.db")
     cursor = conn.cursor()
 
-    cursor.execute("SELECT book_id, title, author, language, description, file_path FROM books")
-    books = cursor.fetchall()
+    cursor.execute("""
+        INSERT INTO books (title, author, language, description, file_path)
+        VALUES (?, ?, ?, ?, ?)
+    """, (title, author, language, description, file_path))
 
-    st.title("📚 Multilingual eBook Library")
-    st.markdown("Click a book **twice** to open the link.")
+    conn.commit()
+    conn.close()
+
+# ---------- STEP 3: Display books based on search ----------
+def display_books(search_term):
+    conn = sqlite3.connect("ebooks.db")
+    cursor = conn.cursor()
+
+    query = """
+        SELECT book_id, title, author, language, description, file_path
+        FROM books
+        WHERE title LIKE ? OR author LIKE ? OR language LIKE ?
+    """
+    like_term = f"%{search_term}%"
+    cursor.execute(query, (like_term, like_term, like_term))
+    books = cursor.fetchall()
+    conn.close()
+
+    st.subheader("📚 Matching Books")
+
+    if not books:
+        st.info("No books found matching your search.")
+        return
 
     for book in books:
         book_id, title, author, language, description, file_path = book
@@ -63,8 +75,40 @@ def display_books():
             else:
                 st.info("Click once more to open the book!")
 
-    conn.close()
+# ---------- STEP 4: Form to insert book ----------
+def book_entry_form():
+    st.subheader("➕ Add New Book")
+    with st.form("new_book_form"):
+        title = st.text_input("Title")
+        author = st.text_input("Author")
+        language = st.text_input("Language")
+        description = st.text_area("Description")
+        file_path = st.text_input("File URL (Link)")
+
+        submitted = st.form_submit_button("Add Book")
+        if submitted:
+            if title and author and file_path:
+                insert_book(title, author, language, description, file_path)
+                st.success(f"✅ Book '{title}' added successfully!")
+            else:
+                st.error("❗ Title, Author, and File URL are required.")
+
+# ---------- MAIN ----------
+def main():
+    st.title("📚 Multilingual eBook Library")
+    st.markdown("Search and click a book **twice** to open the link.")
+
+    create_database()
+
+    # Book search box
+    search_term = st.text_input("🔍 Search by title, author, or language", "")
+
+    # Show filtered books
+    display_books(search_term)
+
+    st.markdown("---")
+    # Add book form
+    book_entry_form()
 
 if __name__ == "__main__":
-    create_database()
-    display_books()
+    main()
