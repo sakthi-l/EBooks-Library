@@ -36,9 +36,9 @@ def create_database():
     INSERT INTO books (title, author, language, description, file_path)
     VALUES (?, ?, ?, ?, ?)
     """, [
-        ('Thirukkural', 'Thiruvalluvar', 'Tamil', 'Ancient Tamil couplets', '/ebooks/thirukkural.pdf'),
-        ('Gitanjali', 'Rabindranath Tagore', 'Bengali', 'Poems of devotion', '/ebooks/gitanjali.pdf'),
-        ('Panchatantra', 'Vishnu Sharma', 'Sanskrit', 'Stories with morals', '/ebooks/panchatantra.pdf')
+        ('Thirukkural', 'Thiruvalluvar', 'Tamil', 'Ancient Tamil couplets', 'https://www.scribd.com/document/456942075/%E0%AE%A4%E0%AE%BF%E0%AE%B0%E0%AF%81%E0%AE%95-%E0%AE%95%E0%AF%81%E0%AE%B1%E0%AE%B3-%E0%AE%8E%E0%AE%B3%E0%AE%BF%E0%AE%AF-%E0%AE%89%E0%AE%B0%E0%AF%88-pdf'),
+        ('Gitanjali', 'Rabindranath Tagore', 'Bengali', 'Poems of devotion', 'https://archive.org/details/gitanjali00unse/page/n21/mode/2up'),
+        ('Panchatantra', 'Vishnu Sharma', 'Sanskrit', 'Stories with morals', 'https://archive.org/details/PanchatantraSanskritHindi-JpMishra1910')
     ])
 
     conn.commit()
